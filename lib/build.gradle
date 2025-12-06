@@ -30,6 +30,7 @@ ext {
     set('springCloudVersion', "2025.0.0")
     set('resilience4jVersion', "2.3.0")
     set('springDocVersion', "2.8.14")
+    set('jjwtVersion', "0.11.5")
 }
 
 dependencyManagement {
@@ -73,6 +74,11 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springDocVersion}"
+
+    // --- [5] jwt ---
+    api "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
 
 }
 
