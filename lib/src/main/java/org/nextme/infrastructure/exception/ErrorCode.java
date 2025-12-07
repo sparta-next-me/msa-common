@@ -12,7 +12,6 @@ public enum ErrorCode {
     BAD_REQUEST(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "Bad Request"),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Unauthorized"),
     FORBIDDEN(HttpStatus.FORBIDDEN, "FORBIDDEN", "Forbidden"),
-    NOT_FOUND(HttpStatus.NOT_FOUND, "NOT_FOUND", "Not Found"),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "Internal Server Error"),
 
     // validation
@@ -21,7 +20,10 @@ public enum ErrorCode {
     // user
     DUPLICATED_USERNAME(HttpStatus.CONFLICT, "DUPLICATED_USERNAME", "Username is already taken."),
     DUPLICATED_EMAIL(HttpStatus.CONFLICT, "DUPLICATED_EMAIL", "Email is already in use."),
-    USER_NOT_FOUND(HttpStatus.NOT_FOUND,"USER_NOT_FOUND", "User Not Found");
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND,"USER_NOT_FOUND", "User Not Found"),
+
+    // authz (권한 없음)
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "Access is denied.");
 
     private final HttpStatus httpStatus;
     private final String code;

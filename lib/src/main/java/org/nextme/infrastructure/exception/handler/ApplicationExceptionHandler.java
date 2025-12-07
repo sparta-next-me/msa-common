@@ -6,6 +6,7 @@ import org.nextme.infrastructure.exception.ErrorCode;
 import org.nextme.infrastructure.exception.ErrorResponse;
 import org.nextme.infrastructure.exception.FieldError;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -59,5 +60,24 @@ public class ApplicationExceptionHandler {
                 .status(internalServerError.getHttpStatus())
                 .body(
                         new ErrorResponse<>(internalServerError.getCode(), internalServerError.getDefaultMessage(), null));
+    }
+
+    /**
+     * 권한 없는 경우(@PreAuthorize 등에서 막힌 경우) 403으로 내려주기
+     */
+    @ExceptionHandler(value = AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorResponse<Void>> handleAuthorizationDeniedException(AuthorizationDeniedException e) {
+        log.warn("AuthorizationDeniedException", e);
+
+        // 1) infra ErrorCode 에 ACCESS_DENIED 가 이미 있다면 이렇게:
+        ErrorCode errorCode = ErrorCode.ACCESS_DENIED;
+
+        return ResponseEntity
+                .status(errorCode.getHttpStatus()) // 보통 403
+                .body(new ErrorResponse<>(
+                        errorCode.getCode(),
+                        errorCode.getDefaultMessage(),
+                        null
+                ));
     }
 }
