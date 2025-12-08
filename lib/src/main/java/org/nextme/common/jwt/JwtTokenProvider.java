@@ -33,17 +33,16 @@ public class JwtTokenProvider {
     // ================== 발급 영역 ==================
 
     /**
-     * [기존] 유저 ID + 권한 목록으로 access/refresh 토큰 한 쌍을 발급.
+     * [기존] 유저 ID + 권한 목록으로 access/refresh 토큰 한 쌍 발급.
      *  - 하위 호환용 (name/email/slackId 없음)
+     *  - 내부적으로는 신규 버전(generateTokenPair(userId, null, null, null, roles)) 호출
      */
     public JwtTokenPair generateTokenPair(String userId, List<String> roles) {
-        String accessToken = generateAccessToken(userId, roles);
-        String refreshToken = generateRefreshToken(userId);
-        return new JwtTokenPair(accessToken, refreshToken);
+        return generateTokenPair(userId, null, null, null, roles);
     }
 
     /**
-     * [신규] 유저 ID + name + email + slackId + 권한 목록으로 access/refresh 토큰 한 쌍을 발급.
+     * [신규] 유저 ID + name + email + slackId + 권한 목록으로 access/refresh 토큰 한 쌍 발급.
      */
     public JwtTokenPair generateTokenPair(
             String userId,
@@ -53,15 +52,15 @@ public class JwtTokenProvider {
             List<String> roles
     ) {
         String accessToken = generateAccessToken(userId, name, email, slackId, roles);
-        String refreshToken = generateRefreshToken(userId);
+        String refreshToken = generateRefreshToken(userId, name, email, slackId, roles);
         return new JwtTokenPair(accessToken, refreshToken);
     }
 
     /**
      * [기존] AccessToken 발급 (userId + roles만 사용)
+     *  - 내부적으로 신규 버전 호출 (name/email/slackId = null)
      */
     public String generateAccessToken(String userId, List<String> roles) {
-        // 신규 메서드에 null 값으로 위임해서 하위호환 유지
         return generateAccessToken(userId, null, null, null, roles);
     }
 
@@ -89,11 +88,9 @@ public class JwtTokenProvider {
                 .setSubject(userId)
                 .claim("roles", roles)
                 .claim("type", "access")
-                // === 추가 클레임 ===
                 .claim("name", name)
                 .claim("email", email)
                 .claim("slackId", slackId)
-                // ==================
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiry)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -101,12 +98,28 @@ public class JwtTokenProvider {
     }
 
     /**
-     * RefreshToken 발급
-     * - subject : userId
-     * - type    : "refresh"
-     *   (보통 refresh 에는 최소 정보만 넣는 게 좋아서 name/email/slackId 는 안 넣음)
+     * [기존] RefreshToken 발급 (최소 정보만)
+     *  - 내부적으로 신규 버전 호출 (name/email/slackId = null)
      */
     public String generateRefreshToken(String userId) {
+        return generateRefreshToken(userId, null, null, null, List.of());
+    }
+
+    /**
+     * [신규] RefreshToken 발급
+     *
+     * - subject : userId
+     * - type    : "refresh"
+     * - name/email/slackId/roles 도 함께 넣어서,
+     *   재발급 API에서 DB 조회 없이 새 토큰 만들 수 있게 함.
+     */
+    public String generateRefreshToken(
+            String userId,
+            String name,
+            String email,
+            String slackId,
+            List<String> roles
+    ) {
         long now = System.currentTimeMillis();
         Date issuedAt = new Date(now);
         Date expiry = new Date(now + refreshTokenValidity);
@@ -114,6 +127,10 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .setSubject(userId)
                 .claim("type", "refresh")
+                .claim("roles", roles)
+                .claim("name", name)
+                .claim("email", email)
+                .claim("slackId", slackId)
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiry)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -156,8 +173,6 @@ public class JwtTokenProvider {
         return List.of();
     }
 
-    // ==== 새로 넣은 클레임 꺼내는 헬퍼 ====
-
     public String getName(String token) {
         return parseClaims(token).get("name", String.class);
     }
@@ -168,5 +183,16 @@ public class JwtTokenProvider {
 
     public String getSlackId(String token) {
         return parseClaims(token).get("slackId", String.class);
+    }
+
+    /**
+     * 해당 토큰이 만료될 때까지 남은 시간(ms)
+     * - 블랙리스트 TTL 설정할 때 사용
+     */
+    public long getRemainingValidityMillis(String token) {
+        Claims claims = parseClaims(token);
+        Date exp = claims.getExpiration();
+        long remaining = exp.getTime() - System.currentTimeMillis();
+        return Math.max(remaining, 0L);
     }
 }

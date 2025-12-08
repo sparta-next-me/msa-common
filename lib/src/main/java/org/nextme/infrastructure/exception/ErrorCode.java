@@ -22,6 +22,10 @@ public enum ErrorCode {
     DUPLICATED_EMAIL(HttpStatus.CONFLICT, "DUPLICATED_EMAIL", "Email is already in use."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND,"USER_NOT_FOUND", "User Not Found"),
 
+    // token
+    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_REFRESH_TOKEN", "Refresh token is invalid or expired."),
+    TOKEN_BLACKLISTED(HttpStatus.UNAUTHORIZED, "TOKEN_BLACKLISTED", "Token is blacklisted."),
+
     // authz (권한 없음)
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "Access is denied.");
 
