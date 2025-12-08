@@ -26,6 +26,10 @@ public class GatewayUserHeaderAuthenticationFilter extends OncePerRequestFilter 
 
     public static final String HEADER_USER_ID = "X-User-Id";
     public static final String HEADER_USER_ROLES = "X-User-Roles";
+    public static final String HEADER_USER_NAME  = "X-User-Name";   // 로그인 ID (user_name)
+    public static final String HEADER_NAME       = "X-Name";        // 실제 이름
+    public static final String HEADER_EMAIL      = "X-Email";
+    public static final String HEADER_SLACK_ID   = "X-Slack-Id";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -49,6 +53,11 @@ public class GatewayUserHeaderAuthenticationFilter extends OncePerRequestFilter 
             return;
         }
 
+        String userName = request.getHeader(HEADER_USER_NAME);
+        String name     = request.getHeader(HEADER_NAME);
+        String email    = request.getHeader(HEADER_EMAIL);
+        String slackId  = request.getHeader(HEADER_SLACK_ID);
+
         List<SimpleGrantedAuthority> authorities = List.of();
         if (StringUtils.hasText(rolesHeader)) {
             authorities = Arrays.stream(rolesHeader.split(","))
@@ -61,8 +70,11 @@ public class GatewayUserHeaderAuthenticationFilter extends OncePerRequestFilter 
 
         UserPrincipal principal = new UserPrincipal(
                 userId,
-                userId,
-                null,
+                userName != null ? userName : userId, // 로그인 ID 없으면 일단 userId로
+                name,
+                email,
+                slackId,
+                null,           // password는 헤더로 안 내려주므로 null
                 authorities
         );
 

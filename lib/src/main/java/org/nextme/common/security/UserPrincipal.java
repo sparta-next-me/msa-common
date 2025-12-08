@@ -6,8 +6,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 
 public record UserPrincipal(
-        String userId,
-        String username,
+        String userId,   // UUID 문자열
+        String username, // 로그인 ID (user_name)
+        String name,     // 실 이름
+        String email,    // 이메일
+        String slackId,  // 슬랙 ID (nullable)
         String password,
         Collection<? extends GrantedAuthority> authorities
 ) implements UserDetails {
@@ -22,28 +25,42 @@ public record UserPrincipal(
         return password;
     }
 
+    /** Spring Security가 쓰는 "username" (로그인 ID) */
     @Override
     public String getUsername() {
         return username;
     }
 
+    /** 우리 서비스에서 쓸 실제 이름 */
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getSlackId() {
+        return slackId;
+    }
+
     @Override
     public boolean isAccountNonExpired() {
-        return true; // 실제 정책에 맞게 변경 가능
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // 실제 정책에 맞게 변경 가능
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // 실제 정책에 맞게 변경 가능
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return true; // 실제 정책에 맞게 변경 가능
+        return true;
     }
 }
