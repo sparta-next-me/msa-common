@@ -4,6 +4,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.List;
 
 public record UserPrincipal(
         String userId,   // UUID 문자열
@@ -12,6 +13,7 @@ public record UserPrincipal(
         String email,    // 이메일
         String slackId,  // 슬랙 ID (nullable)
         String password,
+        List<String> roles,
         Collection<? extends GrantedAuthority> authorities
 ) implements UserDetails {
 
@@ -42,6 +44,10 @@ public record UserPrincipal(
 
     public String getSlackId() {
         return slackId;
+    }
+
+    public List<String> getRoles() {
+        return roles;
     }
 
     @Override

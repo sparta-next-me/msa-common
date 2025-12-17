@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,6 +38,7 @@ public class GatewayUserHeaderAuthenticationFilter extends OncePerRequestFilter 
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+
         // 이미 인증돼 있으면 건드리지 않음
         Authentication existing = SecurityContextHolder.getContext().getAuthentication();
         if (existing != null && existing.isAuthenticated()) {
@@ -57,9 +59,15 @@ public class GatewayUserHeaderAuthenticationFilter extends OncePerRequestFilter 
         String name     = request.getHeader(HEADER_NAME);
         String email    = request.getHeader(HEADER_EMAIL);
         String slackId  = request.getHeader(HEADER_SLACK_ID);
-
+        List<String> roles = List.of();
         List<SimpleGrantedAuthority> authorities = List.of();
+
         if (StringUtils.hasText(rolesHeader)) {
+            roles = Arrays.stream(rolesHeader.split(","))
+                    .map(String::trim)
+                    .filter(StringUtils::hasText)
+                    .toList();
+
             authorities = Arrays.stream(rolesHeader.split(","))
                     .filter(StringUtils::hasText)
                     .map(String::trim)
@@ -75,6 +83,7 @@ public class GatewayUserHeaderAuthenticationFilter extends OncePerRequestFilter 
                 email,
                 slackId,
                 null,           // password는 헤더로 안 내려주므로 null
+                roles,
                 authorities
         );
 

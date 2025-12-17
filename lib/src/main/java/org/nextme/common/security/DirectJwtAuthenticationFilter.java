@@ -113,6 +113,7 @@ public class DirectJwtAuthenticationFilter extends OncePerRequestFilter {
                 email,
                 slackId,
                 null,           // password (JWT 기반이라 비밀번호는 안 씀)
+                roles,
                 authorities
         );
 
